@@ -134,15 +134,26 @@ $('generate-btn').addEventListener('click', async () => {
     return;
   }
 
-  const theme = $('theme-input').value.trim();
-  const style = $('style-custom-input').value.trim();
+  const drinks = [];
+  if ($('drink-beer').checked)  drinks.push('beer');
+  if ($('drink-shots').checked) drinks.push('shots');
+  if (drinks.length === 0) {
+    show('drinks-error');
+    return;
+  }
+  hide('drinks-error');
+
+  const severity = document.querySelector('input[name="severity"]:checked')?.value || 'normal';
+  const gekke    = $('opt-gekke').checked;
+  const theme    = $('theme-input').value.trim();
+  const style    = $('style-custom-input').value.trim();
   startLoading();
 
   try {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ names, theme, style }),
+      body: JSON.stringify({ names, theme, style, drinks, severity, gekke }),
     });
 
     const data = await res.json();
@@ -225,9 +236,6 @@ function showResult(data) {
     container.appendChild(clone);
   });
 
-  // Drinkschema
-  $('schedule-display').innerHTML = formatSchedule(data.schedule);
-
   // Lyrics
   $('lyrics-display').innerHTML = formatLyrics(data.lyrics);
 
@@ -241,7 +249,6 @@ function resetUI() {
   hide('section-loading');
   show('section-form');
   $('tracks-container').innerHTML = '';
-  $('schedule-display').innerHTML = '';
   $('lyrics-display').innerHTML = '';
   setStepStatus('step-openai', '');
   setStepStatus('step-suno', '');
