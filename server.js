@@ -54,28 +54,80 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateDrinkingSchedule(names) {
-  return names.map((name) => {
+function beerPunishment(name, roll, severity, communal = false) {
+  const subject = communal ? 'Iedereen' : name;
+  if (severity === 'rogue') {
+    // Rogue = veel meer adtjes, weinig slokken
+    if (roll < 0.15) {
+      const n = randInt(3, 8);
+      return `${subject} drinkt ${n} slok${n === 1 ? '' : 'ken'}`;
+    } else if (roll < 0.65) {
+      return `${subject} drinkt een adtje`;
+    } else {
+      return `${subject} drinkt een half adtje`;
+    }
+  } else {
+    if (roll < 0.60) {
+      const n = randInt(1, 10);
+      return `${subject} drinkt ${n} slok${n === 1 ? '' : 'ken'}`;
+    } else if (roll < 0.80) {
+      return `${subject} drinkt een adtje`;
+    } else {
+      return `${subject} drinkt een half adtje`;
+    }
+  }
+}
+
+function shotPunishment(name, severity, communal = false) {
+  const subject = communal ? 'Iedereen' : name;
+  const n = severity === 'rogue' ? randInt(2, 3) : 1;
+  return `${subject} drinkt ${n} shot${n === 1 ? '' : 's'}`;
+}
+
+// drinks: array containing 'beer' and/or 'shots' (default ['beer'])
+// severity: 'normal' | 'rogue'
+//
+// Generates `names.length` rounds, but each round picks a RANDOM player —
+// so some players may be picked multiple times and others not at all.
+function generateDrinkingSchedule(names, { drinks = ['beer'], severity = 'normal' } = {}) {
+  const hasBeer = drinks.includes('beer');
+  const hasShots = drinks.includes('shots');
+  const rounds = names.length;
+
+  return Array.from({ length: rounds }, () => {
+    const name = names[Math.floor(Math.random() * names.length)];
+
     // 25% kans: gezamenlijke ronde — iedereen deelt mee, individuele straf vervalt
     if (Math.random() < 0.25) {
-      const n = randInt(1, 10);
+      let punishment;
+      if (hasBeer && hasShots) {
+        punishment = Math.random() < 0.5
+          ? beerPunishment(name, Math.random(), severity, true)
+          : shotPunishment(name, severity, true);
+      } else if (hasBeer) {
+        punishment = beerPunishment(name, Math.random(), severity, true);
+      } else {
+        punishment = shotPunishment(name, severity, true);
+      }
       return {
         type: 'gezamenlijk',
         name,
-        punishment: `Iedereen drinkt ${n} slok${n === 1 ? '' : 'ken'}`,
+        punishment,
         note: `${name} was aan de beurt maar iedereen deelt mee`,
       };
     }
 
     const roll = Math.random();
     let punishment;
-    if (roll < 0.60) {
-      const n = randInt(1, 10);
-      punishment = `${name} drinkt ${n} slok${n === 1 ? '' : 'ken'}`;
-    } else if (roll < 0.80) {
-      punishment = `${name} drinkt een adtje`;
+    if (hasBeer && hasShots) {
+      // ~30% kans op een shot, rest bier
+      punishment = Math.random() < 0.30
+        ? shotPunishment(name, severity)
+        : beerPunishment(name, roll, severity);
+    } else if (hasShots) {
+      punishment = shotPunishment(name, severity);
     } else {
-      punishment = `${name} drinkt een half adtje`;
+      punishment = beerPunishment(name, roll, severity);
     }
 
     return { type: 'individual', name, punishment };
@@ -84,32 +136,52 @@ function generateDrinkingSchedule(names) {
 
 // ── Prompt engineering via OpenAI ────────────────────────────────────────────
 
-async function buildSunoPrompt({ names, theme, style, schedule }) {
+async function buildSunoPrompt({ names, theme, style, schedule, gekke = false }) {
   const scheduleText = schedule
     .map((r, i) => {
       const base = `Ronde ${i + 1}: ${r.punishment}`;
-      return r.type === 'gezamenlijk' ? `${base}  ← (${r.note})` : base;
+      const communalNote = r.type === 'gezamenlijk' ? `  ← (${r.note})` : '';
+      const gekkeTag = (gekke && r.gekke) ? '  ← [GEKKE MANIER]' : '';
+      return `${base}${communalNote}${gekkeTag}`;
     })
     .join('\n');
+
+  const gekkeBlock = gekke ? `
+
+GEKKE MODUS — ACTIEF:
+Rondes met [GEKKE MANIER] krijgen een grappige, concrete uitvoeringswijze in plaats van simpelweg "drinkt een adtje" of "drinkt een half adtje".
+Bedenk per ronde een unieke, hilarische opdracht hoe het adtje gedronken moet worden.
+Verwerk die manier in de straftekst zelf (bv. "Jan drinkt een adtje terwijl hij staat op één been").
+Geef het bijgewerkte schema terug als extra JSON-veld "schedule": array van objecten { type, name, punishment, note? }.
+Gewone rondes: ongewijzigd overnemen. [GEKKE MANIER]-rondes: de grappige methode verwerkt in "punishment".` : '';
+
+  const scheduleReturnField = gekke ? '\n- schedule: bijgewerkt drinkschema met grappige uitvoeringswijzen (zie GEKKE MODUS)' : '';
 
   const systemPrompt = `Je bent een schrijver van Nederlandse drankspelliedjes.
 De drinkregels zijn al VASTGELEGD via een willekeurige generator. Jouw enige taak is er een leuk verhaal omheen schrijven.
 
-Geef je antwoord als valide JSON met precies deze velden:
+Geef je antwoord als valide JSON met deze velden:
 - title: pakkende, grappige titel (max 60 tekens)
 - tags: muziekstijl-tags voor Suno, kommagescheiden
-- lyrics: de volledige liedtekst
+- lyrics: de volledige liedtekst${scheduleReturnField}
 
-DRINKSCHEMA (staat vast — verander hoeveelheden of namen NIET):
+DRINKSCHEMA (staat vast — namen en hoeveelheden NIET wijzigen${gekke ? ', behalve de uitvoeringswijze van [GEKKE MANIER]-rondes' : ''}):
 ${scheduleText}
+${gekkeBlock}
 
 HOE JE HET LIEDJE OPBOUWT:
 Voor elke ronde schrijf je één blok lyrics:
-  - OPBOUW (3-4 regels): grappig verhaaltje over de spelers, nog geen drankregel.
-    Bouw spanning op. Je MAG misleidend zijn: hint naar persoon A terwijl de straf voor B is.
+  - OPBOUW (3-4 regels): grappig verhaaltje over de sfeer of de spelers. Bouw spanning op.
+    Je MAG misleidend zijn: hint naar persoon A terwijl de straf voor B is.
     Bij een gezamenlijke ronde: hint dat iedereen erbij betrokken is.
-  - STRAF (1-2 regels): de exacte drinkregel uit het schema, letterlijk overgenomen.
-    De straf eindigt de ronde.
+    ⚠️ VERBODEN in de opbouw: elk woord dat naar drinken verwijst — "drink", "drinkt", "slok",
+    "biertje", "adtje", "shot", "cocktail", "glas", "fles", "slurp", of synoniemen daarvan.
+    De opbouw mag NOOIT verraden wie er drinkt of wat.
+  - STRAF (1-2 regels): de drinkregel uit het schema, letterlijk overgenomen.
+    Dit is het ENIGE moment in de hele ronde dat drinken wordt genoemd.
+    De straf eindigt de ronde.${gekke ? `
+    Bij [GEKKE MANIER]-rondes: de strafzin bevat ZOWEL de hoeveelheid ALS de grappige
+    uitvoeringswijze in één zin, bv. "Jan drinkt een adtje terwijl hij staat op één been".` : ''}
 
 Tussen elke twee rondes een [Chorus] van 2-4 regels: feestelijk, herhalend, zonder drankregel.
 Na de laatste ronde een kort [Outro].
@@ -216,7 +288,7 @@ async function pollSunoJob(taskId, maxWaitMs = 300_000) {
 // ── Hoofd-endpoint ───────────────────────────────────────────────────────────
 
 app.post('/api/generate', requireAuth, async (req, res) => {
-  const { names, theme, style } = req.body;
+  const { names, theme, style, drinks, severity, gekke } = req.body;
   if (!Array.isArray(names) || names.length < 2) {
     return res.status(400).json({ error: 'Voer minimaal 2 namen in' });
   }
@@ -229,10 +301,27 @@ app.post('/api/generate', requireAuth, async (req, res) => {
 
   try {
     // 1) Random drinkschema genereren (geen LLM)
-    const schedule = generateDrinkingSchedule(names);
+    const drinkOptions = {
+      drinks: Array.isArray(drinks) && drinks.length ? drinks : ['beer'],
+      severity: severity === 'rogue' ? 'rogue' : 'normal',
+    };
+    const schedule = generateDrinkingSchedule(names, drinkOptions);
 
-    // 2) OpenAI schrijft het verhaal om het schema heen
-    const { title, tags, lyrics } = await buildSunoPrompt({ names, theme, style, schedule });
+    // In gekke modus: markeer adtje-rondes zodat GPT er een grappige draai aan geeft
+    const isGekke = gekke === true;
+    if (isGekke) {
+      schedule.forEach((r) => {
+        if (/adtje|biertje/i.test(r.punishment)) r.gekke = true;
+      });
+    }
+
+    // 2) OpenAI schrijft het verhaal om het schema heen (en verrijkt in gekke modus)
+    const result = await buildSunoPrompt({ names, theme, style, schedule, gekke: isGekke });
+    const { title, tags, lyrics } = result;
+    // Als GPT een bijgewerkt schema teruggeeft (gekke modus), gebruik dat voor de weergave
+    const finalSchedule = (isGekke && Array.isArray(result.schedule) && result.schedule.length)
+      ? result.schedule
+      : schedule;
 
     // 3) Suno job indienen
     const taskId = await submitSunoJob(title, tags, lyrics);
@@ -244,7 +333,7 @@ app.post('/api/generate', requireAuth, async (req, res) => {
       title,
       tags,
       lyrics,
-      schedule,
+      schedule: finalSchedule,
       tracks: sunoData.map((m) => ({
         musicId: m.id,
         title: m.title || title,
