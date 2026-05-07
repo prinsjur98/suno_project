@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Drankspel" />
+  <title>Suno Drankspel</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- ── Login scherm ──────────────────────────────────────── -->
+  <div id="screen-login" class="screen active">
+    <div class="login-card">
+      <div class="app-icon">🍺</div>
+      <h1>Suno Drankspel</h1>
+      <p class="subtitle">Genereer jouw eigen drankspelliedje</p>
+      <form id="login-form">
+        <input
+          id="password-input"
+          type="password"
+          placeholder="Wachtwoord"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit" class="btn btn-primary btn-full">Inloggen</button>
+        <p id="login-error" class="error-msg hidden">Verkeerd wachtwoord</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Generator scherm ─────────────────────────────────── -->
+  <div id="screen-main" class="screen">
+    <header class="topbar">
+      <span class="topbar-title">🍺 Drankspel</span>
+      <button id="logout-btn" class="btn-ghost">Uitloggen</button>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Form -->
+      <section id="section-form">
+
+        <!-- Namen -->
+        <div class="card">
+          <h2>Spelers</h2>
+          <p class="hint">Voeg minstens 2 namen toe. Elke speler krijgt zijn eigen drinkregels.</p>
+
+          <div id="names-list" class="names-list"></div>
+
+          <div class="name-input-row">
+            <input
+              id="name-input"
+              type="text"
+              placeholder="Naam toevoegen…"
+              maxlength="30"
+              autocomplete="off"
+            />
+            <button type="button" id="add-name-btn" class="btn btn-primary">+</button>
+          </div>
+          <p id="names-error" class="error-msg hidden">Voeg minimaal 2 namen toe</p>
+        </div>
+
+        <!-- Extra opties -->
+        <div class="card">
+          <h2>Extra <span class="optional-label">(optioneel)</span></h2>
+
+          <label class="field-label">Thema / verziering</label>
+          <input
+            id="theme-input"
+            type="text"
+            placeholder="Bijv: voetbal, vakantie, casino, 90s…"
+            maxlength="80"
+          />
+
+          <label class="field-label" style="margin-top:16px">Muziekstijl</label>
+          <input
+            id="style-custom-input"
+            type="text"
+            placeholder="Bijv. pop, rap, schlager, reggaeton… (leeg = willekeurig)"
+            maxlength="100"
+          />
+          <div class="style-presets" id="style-presets" style="margin-top:8px">
+            <button type="button" class="preset-btn" data-style="dutch pop, uptempo, catchy">🎵 Pop</button>
+            <button type="button" class="preset-btn" data-style="dutch hip hop, rap, party">🎤 Rap</button>
+            <button type="button" class="preset-btn" data-style="schlager, accordeon, dutch, festival">🪗 Schlager</button>
+            <button type="button" class="preset-btn" data-style="electronic, techno, dance, club">🎧 Techno</button>
+            <button type="button" class="preset-btn" data-style="rock, guitar, energetic, anthem">🎸 Rock</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="generate-btn">
+          🎵 Genereer liedje
+        </button>
+
+      </section>
+
+      <!-- Loading -->
+      <section id="section-loading" class="card hidden">
+        <div class="loader-wrap">
+          <div class="spinner"></div>
+          <p id="loading-text" class="loading-label">Even geduld…</p>
+          <p class="loading-sub">Gemiddeld 1-2 minuten</p>
+        </div>
+        <div class="steps">
+          <div class="step" id="step-openai">
+            <span class="step-icon">🤖</span>
+            <span>Drinkregels schrijven via GPT-4o</span>
+            <span class="step-status" id="step-openai-status"></span>
+          </div>
+          <div class="step" id="step-suno">
+            <span class="step-icon">🎶</span>
+            <span>Liedje genereren via Suno</span>
+            <span class="step-status" id="step-suno-status"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Error -->
+      <section id="section-error" class="card hidden">
+        <div class="error-box">
+          <p class="error-title">❌ Er ging iets mis</p>
+          <p id="error-message"></p>
+          <button id="retry-btn" class="btn btn-secondary">Opnieuw proberen</button>
+        </div>
+      </section>
+
+      <!-- Result -->
+      <section id="section-result" class="hidden">
+
+        <div id="tracks-container"></div>
+
+        <!-- Drinkschema -->
+        <div class="card" id="schedule-card">
+          <h3>🎲 Drinkschema</h3>
+          <p class="hint">Gegenereerd vóór het liedje — de volgorde is wat het is.</p>
+          <div id="schedule-display"></div>
+        </div>
+
+        <!-- Liedtekst -->
+        <div class="card" id="lyrics-card">
+          <h3>🎵 Liedtekst</h3>
+          <div id="lyrics-display" class="lyrics-text"></div>
+        </div>
+
+        <button id="new-song-btn" class="btn btn-secondary btn-full">
+          🔄 Nieuw liedje
+        </button>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── Track card template ───────────────────────────────── -->
+  <template id="track-template">
+    <div class="card track-card">
+      <div class="track-header">
+        <img class="track-cover" src="" alt="Cover" />
+        <div class="track-info">
+          <h3 class="track-title"></h3>
+          <p class="track-tags"></p>
+          <p class="track-duration"></p>
+        </div>
+      </div>
+      <audio class="track-audio" controls preload="none"></audio>
+      <div class="track-actions">
+        <a class="btn btn-primary track-download" href="#" download>⬇ Download MP3</a>
+      </div>
+    </div>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
