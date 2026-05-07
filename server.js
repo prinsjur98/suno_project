@@ -89,10 +89,11 @@ function shotPunishment(name, severity, communal = false) {
 //
 // Generates `names.length` rounds, but each round picks a RANDOM player —
 // so some players may be picked multiple times and others not at all.
-function generateDrinkingSchedule(names, { drinks = ['beer'], severity = 'normal' } = {}) {
+function generateDrinkingSchedule(names, { drinks = ['beer'], severity = 'normal', rounds } = {}) {
   const hasBeer = drinks.includes('beer');
   const hasShots = drinks.includes('shots');
-  const rounds = names.length;
+  if (!rounds || rounds < 1) rounds = names.length;
+  rounds = Math.min(Math.max(Math.round(rounds), 1), 8);
 
   return Array.from({ length: rounds }, () => {
     const name = names[Math.floor(Math.random() * names.length)];
@@ -288,7 +289,7 @@ async function pollSunoJob(taskId, maxWaitMs = 300_000) {
 // ── Hoofd-endpoint ───────────────────────────────────────────────────────────
 
 app.post('/api/generate', requireAuth, async (req, res) => {
-  const { names, theme, style, drinks, severity, gekke } = req.body;
+  const { names, theme, style, drinks, severity, gekke, rounds } = req.body;
   if (!Array.isArray(names) || names.length < 2) {
     return res.status(400).json({ error: 'Voer minimaal 2 namen in' });
   }
@@ -304,6 +305,7 @@ app.post('/api/generate', requireAuth, async (req, res) => {
     const drinkOptions = {
       drinks: Array.isArray(drinks) && drinks.length ? drinks : ['beer'],
       severity: severity === 'rogue' ? 'rogue' : 'normal',
+      rounds: typeof rounds === 'number' ? rounds : undefined,
     };
     const schedule = generateDrinkingSchedule(names, drinkOptions);
 
