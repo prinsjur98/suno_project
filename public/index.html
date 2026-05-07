@@ -95,6 +95,12 @@
             </label>
           </div>
 
+          <label class="field-label" style="margin-top:16px">Aantal rondes</label>
+          <div class="rounds-slider-row">
+            <input type="range" id="rounds-input" min="1" max="8" value="4" />
+            <span id="rounds-display" class="rounds-value">4</span>
+          </div>
+
           <label class="field-label" style="margin-top:16px">Extra's</label>
           <div class="drink-toggles">
             <label class="drink-toggle">
@@ -174,7 +180,7 @@
         <div id="tracks-container"></div>
 
         <!-- Liedtekst -->
-        <div class="card" id="lyrics-card">
+        <div class="card hidden" id="lyrics-card">
           <h3>🎵 Liedtekst</h3>
           <div id="lyrics-display" class="lyrics-text"></div>
         </div>
