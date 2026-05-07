@@ -66,6 +66,44 @@
           <p id="names-error" class="error-msg hidden">Voeg minimaal 2 namen toe</p>
         </div>
 
+        <!-- Dranken & modus -->
+        <div class="card">
+          <h2>Dranken &amp; modus</h2>
+
+          <label class="field-label">Wat drinken jullie?</label>
+          <div class="drink-toggles">
+            <label class="drink-toggle">
+              <input type="checkbox" id="drink-beer" checked />
+              <span>🍺 Bier</span>
+            </label>
+            <label class="drink-toggle">
+              <input type="checkbox" id="drink-shots" />
+              <span>🥃 Shots</span>
+            </label>
+          </div>
+          <p id="drinks-error" class="error-msg hidden">Selecteer minimaal één drank</p>
+
+          <label class="field-label" style="margin-top:16px">Strengheid</label>
+          <div class="severity-toggles">
+            <label class="severity-option">
+              <input type="radio" name="severity" value="normal" checked />
+              <span>😊 Normaal</span>
+            </label>
+            <label class="severity-option">
+              <input type="radio" name="severity" value="rogue" />
+              <span>🔥 Rogue <span class="option-hint">(meer adtjes)</span></span>
+            </label>
+          </div>
+
+          <label class="field-label" style="margin-top:16px">Extra's</label>
+          <div class="drink-toggles">
+            <label class="drink-toggle">
+              <input type="checkbox" id="opt-gekke" />
+              <span>🤪 Gekke modus <span class="option-hint">(GPT bedenkt een hilarische manier voor elk adtje)</span></span>
+            </label>
+          </div>
+        </div>
+
         <!-- Extra opties -->
         <div class="card">
           <h2>Extra <span class="optional-label">(optioneel)</span></h2>
@@ -134,13 +172,6 @@
       <section id="section-result" class="hidden">
 
         <div id="tracks-container"></div>
-
-        <!-- Drinkschema -->
-        <div class="card" id="schedule-card">
-          <h3>🎲 Drinkschema</h3>
-          <p class="hint">Gegenereerd vóór het liedje — de volgorde is wat het is.</p>
-          <div id="schedule-display"></div>
-        </div>
 
         <!-- Liedtekst -->
         <div class="card" id="lyrics-card">
