@@ -402,6 +402,56 @@ input[type="password"] { margin-bottom: 16px; letter-spacing: .1em; }
 .track-actions { display: flex; gap: 10px; }
 .track-actions .btn { flex: 1; font-size: .9rem; padding: 10px 12px; }
 
+/* ── Drink-type toggles & severity ──────────────────────────────────────── */
+.drink-toggles,
+.severity-toggles {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.drink-toggle,
+.severity-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 600;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+}
+
+.drink-toggle:hover,
+.severity-option:hover {
+  border-color: var(--purple);
+}
+
+.drink-toggle input,
+.severity-option input {
+  accent-color: var(--purple);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.drink-toggle:has(input:checked),
+.severity-option:has(input:checked) {
+  border-color: var(--purple);
+  background: rgba(124, 58, 237, .18);
+}
+
+.option-hint {
+  font-weight: 400;
+  font-size: .8rem;
+  color: var(--muted);
+}
+
 /* ── Drinkschema ────────────────────────────────────────────────────────── */
 #schedule-display {
   display: flex;
