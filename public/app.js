@@ -63,6 +63,12 @@ $('name-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); addName(); }
 });
 
+// ── Rondes schuifregelaar ─────────────────────────────────────────────────────
+
+$('rounds-input').addEventListener('input', () => {
+  $('rounds-display').textContent = $('rounds-input').value;
+});
+
 // ── Stijl presets (snelknoppen die het tekstveld invullen) ───────────────────
 
 document.querySelectorAll('.preset-btn').forEach((btn) => {
@@ -145,6 +151,7 @@ $('generate-btn').addEventListener('click', async () => {
 
   const severity = document.querySelector('input[name="severity"]:checked')?.value || 'normal';
   const gekke    = $('opt-gekke').checked;
+  const rounds   = parseInt($('rounds-input').value, 10);
   const theme    = $('theme-input').value.trim();
   const style    = $('style-custom-input').value.trim();
   startLoading();
@@ -153,7 +160,7 @@ $('generate-btn').addEventListener('click', async () => {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ names, theme, style, drinks, severity, gekke }),
+      body: JSON.stringify({ names, theme, style, drinks, severity, gekke, rounds }),
     });
 
     const data = await res.json();
