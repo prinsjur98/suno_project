@@ -517,6 +517,32 @@ input[type="password"] { margin-bottom: 16px; letter-spacing: .1em; }
   .track-cover { width: 96px; height: 96px; }
 }
 
+/* ── Rondes schuifregelaar ──────────────────────────────────────────────── */
+.rounds-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.rounds-slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--purple);
+  height: 6px;
+  cursor: pointer;
+}
+
+.rounds-value {
+  min-width: 28px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--purple-dk);
+  background: var(--purple-lt);
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
 /* ── Safe area (iPhone notch) ───────────────────────────────────────────── */
 @supports (padding-top: env(safe-area-inset-top)) {
   .topbar { padding-top: max(14px, env(safe-area-inset-top)); }
