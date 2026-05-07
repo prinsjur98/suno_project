@@ -1,0 +1,20 @@
+{
+  "name": "suno-drankspel",
+  "version": "1.0.0",
+  "description": "Genereer een drankspelliedje met OpenAI + Suno via TTAPI",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "openai": "^4.98.0"
+  }
+}
