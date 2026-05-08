@@ -67,10 +67,10 @@ function beerPunishment(name, roll, severity, communal = false) {
       return `${subject} drinkt een half adtje`;
     }
   } else {
-    if (roll < 0.60) {
-      const n = randInt(1, 10);
+    if (roll < 0.80) {
+      const n = randInt(1, 5);
       return `${subject} drinkt ${n} slok${n === 1 ? '' : 'ken'}`;
-    } else if (roll < 0.80) {
+    } else if (roll < 0.90) {
       return `${subject} drinkt een adtje`;
     } else {
       return `${subject} drinkt een half adtje`;
